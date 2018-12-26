@@ -42,4 +42,4 @@ DebugLevel: "info"
 useIMessage: "false"
 
 # 是否使用 QPython3.6 运行本脚本
-useQPython3: "true"
+useQPython3: "false"

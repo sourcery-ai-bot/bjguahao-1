@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from os.path import expanduser
 import sqlite3

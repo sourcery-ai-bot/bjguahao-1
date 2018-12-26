@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 北京市预约挂号统一平台
@@ -11,6 +11,7 @@ import json
 import time
 import datetime
 import logging
+import base64
 from lib.prettytable import PrettyTable
 
 if sys.version_info.major != 3:
@@ -175,8 +176,8 @@ class Guahao(object):
         password = self.config.password
         mobile_no = self.config.mobile_no
         payload = {
-            'mobileNo': mobile_no,
-            'password': password,
+            'mobileNo': base64.b64encode(mobile_no.encode()),
+            'password': base64.b64encode(password.encode()),
             'yzm': '',
             'isAjax': True,
         }
