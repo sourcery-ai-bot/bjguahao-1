@@ -28,13 +28,13 @@ class QPython3(object):
             code = self._check_sms_verify_code()
             # 有效验证码？
             if code != '000000':
-                logging.debug("取得有效验证码……"+code)
+                logging.debug(f"取得有效验证码……{code}")
                 break
             else:
-                logging.debug("未找到有效验证码……重试中, retry = {}".format(retry))
+                logging.debug(f"未找到有效验证码……重试中, retry = {retry}")
                 time.sleep(0.05)
         else:
-            logging.debug("未找到有效验证码……"+code)
+            logging.debug(f"未找到有效验证码……{code}")
         return code
     # 读取验证码短信
     def _check_sms_verify_code(self):
@@ -62,10 +62,9 @@ class QPython3(object):
             if res is None:
                 # print("匹配跳过:", smsMessage)
                 continue
-            else:
-                # print("发现短信:", smsMessage)
-                code = res.group(1).strip()
-                break
+            # print("发现短信:", smsMessage)
+            code = res.group(1).strip()
+            break
         return code
     # 获取验证码的外部调用
     def get_verify_code(self):

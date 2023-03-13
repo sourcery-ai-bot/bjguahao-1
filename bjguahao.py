@@ -40,17 +40,17 @@ class Config(object):
             with open(config_path, "r", encoding="utf-8") as yaml_file:
                 data = yaml.load(yaml_file)
                 debug_level = data["DebugLevel"]
-                if debug_level == "debug":
+                if debug_level == "critical":
+                    self.debug_level = logging.CRITICAL
+
+                elif debug_level == "debug":
                     self.debug_level = logging.DEBUG
+                elif debug_level == "error":
+                    self.debug_level = logging.ERROR
                 elif debug_level == "info":
                     self.debug_level = logging.INFO
                 elif debug_level == "warning":
                     self.debug_level = logging.WARNING
-                elif debug_level == "error":
-                    self.debug_level = logging.ERROR
-                elif debug_level == "critical":
-                    self.debug_level = logging.CRITICAL
-
                 logging.basicConfig(level=self.debug_level,
                                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
                                     datefmt='%a, %d %b %Y %H:%M:%S')
@@ -74,15 +74,15 @@ class Config(object):
                     self.useQPython3 = "false"
                 #
                 logging.info("配置加载完成")
-                logging.debug("手机号:" + str(self.mobile_no))
-                logging.debug("挂号日期:" + str(self.date))
-                logging.debug("医院id:" + str(self.hospital_id))
-                logging.debug("科室id:" + str(self.department_id))
-                logging.debug("上午/下午:" + str(self.duty_code))
-                logging.debug("就诊人姓名:" + str(self.patient_name))
-                logging.debug("所选医生:" + str(self.doctorName))
-                logging.debug("使用mac电脑接收验证码:" + str(self.useIMessage))
-                logging.debug("是否使用 QPython3 运行本脚本:" + str(self.useQPython3))
+                logging.debug(f"手机号:{str(self.mobile_no)}")
+                logging.debug(f"挂号日期:{str(self.date)}")
+                logging.debug(f"医院id:{str(self.hospital_id)}")
+                logging.debug(f"科室id:{str(self.department_id)}")
+                logging.debug(f"上午/下午:{str(self.duty_code)}")
+                logging.debug(f"就诊人姓名:{str(self.patient_name)}")
+                logging.debug(f"所选医生:{str(self.doctorName)}")
+                logging.debug(f"使用mac电脑接收验证码:{self.useIMessage}")
+                logging.debug(f"是否使用 QPython3 运行本脚本:{self.useQPython3}")
 
                 if not self.date:
                     logging.error("请填写挂号时间")
@@ -148,7 +148,7 @@ class Guahao(object):
         try:
             data = json.loads(response.text)
             if data["code"] == 200 and data["msg"] == "OK":
-                logging.debug("response data:" + response.text)
+                logging.debug(f"response data:{response.text}")
                 return True
             else:
                 logging.debug("response data: HTML body")
@@ -163,7 +163,9 @@ class Guahao(object):
         """
         try:
             # patch for qpython3
-            cookies_file = os.path.join(os.path.dirname(sys.argv[0]), "." + self.config.mobile_no + ".cookies")
+            cookies_file = os.path.join(
+                os.path.dirname(sys.argv[0]), f".{self.config.mobile_no}.cookies"
+            )
             self.browser.load_cookies(cookies_file)
             if self.is_login():
                 logging.info("cookies登录成功")
@@ -182,12 +184,15 @@ class Guahao(object):
             'isAjax': True,
         }
         response = self.browser.post(self.login_url, data=payload)
-        logging.debug("response data:" + response.text)
+        logging.debug(f"response data:{response.text}")
         try:
             data = json.loads(response.text)
             if data["msg"] == "OK" and not data["hasError"] and data["code"] == 200:
                 # patch for qpython3
-                cookies_file = os.path.join(os.path.dirname(sys.argv[0]), "." + self.config.mobile_no + ".cookies")
+                cookies_file = os.path.join(
+                    os.path.dirname(sys.argv[0]),
+                    f".{self.config.mobile_no}.cookies",
+                )
                 self.browser.save_cookies(cookies_file)
                 logging.info("登陆成功")
                 return True
@@ -208,7 +213,7 @@ class Guahao(object):
         duty_date = self.config.date
 
         # log current date
-        logging.debug("当前挂号日期: " + self.config.date)
+        logging.debug(f"当前挂号日期: {self.config.date}")
 
         payload = {
             'hospitalId': hospital_id,
@@ -219,7 +224,7 @@ class Guahao(object):
         }
 
         response = self.browser.post(self.get_doctor_url, data=payload)
-        logging.debug("response data:" + response.text)
+        logging.debug(f"response data:{response.text}")
 
         try:
             data = json.loads(response.text)
@@ -254,7 +259,6 @@ class Guahao(object):
         for doctor in self.dutys:
             x.add_row([doctor["doctorName"], doctor['skill'], doctor['remainAvailableNumber']])
         print(x.get_string())
-        pass
 
     def get_it(self, doctor, sms_code):
         """
@@ -280,7 +284,7 @@ class Guahao(object):
             'isAjax': True
         }
         response = self.browser.post(self.confirm_url, data=payload)
-        logging.debug("response data:" + response.text)
+        logging.debug(f"response data:{response.text}")
 
         try:
             data = json.loads(response.text)
@@ -315,8 +319,8 @@ class Guahao(object):
         if m is None:
             sys.exit("获取患者id失败")
         else:
-            self.config.patient_id = m.group('patientId')
-            logging.info("病人ID:" + self.config.patient_id)
+            self.config.patient_id = m['patientId']
+            logging.info(f"病人ID:{self.config.patient_id}")
 
             return self.config.patient_id
 
@@ -332,10 +336,10 @@ class Guahao(object):
 
         # 放号时间
         m = re.search('<span>更新时间：</span>每日(?P<refreshTime>\d{1,2}:\d{2})更新', ret)
-        refresh_time = m.group('refreshTime')
+        refresh_time = m['refreshTime']
         # 放号日期
         m = re.search('<span>预约周期：</span>(?P<appointDay>\d+)<script.*', ret)
-        appoint_day = m.group('appointDay')
+        appoint_day = m['appointDay']
 
         today = datetime.date.today()
 
@@ -346,10 +350,10 @@ class Guahao(object):
         # 自动挂最新一天的号
         if self.config.date == 'latest':
             self.config.date = self.stop_date.strftime("%Y-%m-%d")
-            logging.info("当前挂号日期变更为: " + self.config.date)
+            logging.info(f"当前挂号日期变更为: {self.config.date}")
 
         # 生成放号时间和程序开始时间
-        con_data_str = self.config.date + " " + refresh_time + ":00"
+        con_data_str = f"{self.config.date} {refresh_time}:00"
         self.start_time = datetime.datetime.strptime(con_data_str, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(days= - int(appoint_day))
         logging.info("放号时间: " + self.start_time.strftime("%Y-%m-%d %H:%M"))
 
@@ -361,12 +365,11 @@ class Guahao(object):
         if data["msg"] == "OK." and data["code"] == 200:
             logging.info("获取验证码成功")
             if self.imessage is not None: # 如果使用 iMessage
-                code = self.imessage.get_verify_code()
+                return self.imessage.get_verify_code()
             elif self.qpython3 is not None: # 如果使用 QPython3
-                code = self.qpython3.get_verify_code()
+                return self.qpython3.get_verify_code()
             else:
-                code = input("输入短信验证码: ")
-            return code
+                return input("输入短信验证码: ")
         elif data["msg"] == "短信发送太频繁" and data["code"] == 812:
             logging.error(data["msg"])
             sys.exit()
@@ -378,14 +381,13 @@ class Guahao(object):
         cur_time = datetime.datetime.now() + datetime.timedelta(seconds=int(time.timezone + 8*60*60))
         if self.start_time > cur_time:
             seconds = (self.start_time - cur_time).total_seconds()
-            logging.info("距离放号时间还有" + str(seconds) + "秒")
+            logging.info(f"距离放号时间还有{str(seconds)}秒")
             sleep_time = seconds - 60
             if sleep_time > 0:
-                logging.info("程序休眠" + str(sleep_time) + "秒后开始运行")
+                logging.info(f"程序休眠{str(sleep_time)}秒后开始运行")
                 time.sleep(sleep_time)
                 # 自动重新登录
                 self.auth_login()
-        pass
 
     def run(self):
         """主逻辑"""

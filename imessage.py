@@ -26,8 +26,7 @@ class IMessage(object):
         # ~/Library/Messages/chat.db
         db_path = expanduser("~") + '/Library/Messages/chat.db'
         try:
-            conn = sqlite3.connect(db_path)
-            return conn
+            return sqlite3.connect(db_path)
         except Exception as e:
             print('找不到短信数据库', file=sys.stderr, flush=True)
             # sys.exit(-1)

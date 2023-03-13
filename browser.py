@@ -31,7 +31,6 @@ class Browser(object):
         """
         http get
         """
-        pass
         response = self.session.get(url)
         if response.status_code == 200:
             self.session.headers['Referer'] = response.url

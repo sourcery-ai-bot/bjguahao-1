@@ -36,11 +36,7 @@ class KBHit:
         """Creates a KBHit object that you can call to do various keyboard things.
         """
 
-        if os.name == 'nt':
-            pass
-
-        else:
-
+        if os.name != 'nt':
             # Save the terminal settings
             self.fd = sys.stdin.fileno()
             self.new_term = termios.tcgetattr(self.fd)
@@ -57,10 +53,7 @@ class KBHit:
         """ Resets to normal terminal.  On Windows this is a no-op.
         """
 
-        if os.name == 'nt':
-            pass
-
-        else:
+        if os.name != 'nt':
             termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.old_term)
 
     def getch(self):
@@ -70,11 +63,7 @@ class KBHit:
 
         s = ''
 
-        if os.name == 'nt':
-            return msvcrt.getch().decode('utf-8')
-
-        else:
-            return sys.stdin.read(1)
+        return msvcrt.getch().decode('utf-8') if os.name == 'nt' else sys.stdin.read(1)
 
     def getarrow(self):
         """ Returns an arrow-key code after kbhit() has been called. Codes are
@@ -102,9 +91,8 @@ class KBHit:
         if os.name == 'nt':
             return msvcrt.kbhit()
 
-        else:
-            dr, dw, de = select([sys.stdin], [], [], 0)
-            return dr != []
+        dr, dw, de = select([sys.stdin], [], [], 0)
+        return dr != []
 
 
 # Test
